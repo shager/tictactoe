@@ -111,10 +111,18 @@ class TestApp:
         ("a", "1" * (database.PW_HASH_LENGTH + 1)),
         # malformed pw (wrong characters)
         ("a", "x" * database.PW_HASH_LENGTH),
+        # no name
+        (None, "1" * database.PW_HASH_LENGTH),
+        # no password
+        ("a", None)
     ])
     def test_register_player_bad(self, name, pw):
         S = server.Server
-        data = {"name": name, "pw_hash": pw}
+        data = {}
+        if name is not None:
+            data["name"] = name
+        if pw is not None:
+            data["pw_hash"] = pw
         code, content = self.post("register_player", data)
         assert code == Status.BAD_REQUEST.value
         assert content[S.STATUS_KEY] == S.STATUS_ERROR

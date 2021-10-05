@@ -30,26 +30,41 @@ def code_from_response(response: server.Response) -> int:
     return Status.BAD_REQUEST.value
 
 
-def _check_name(name: str) -> None:
-    """ Raises a ValueError if the name is malformed.
+def _check_name(name_key: str) -> str:
+    """ Raises a ValueError if the user name is malformed.
+        Returns the username if all is nice.
 
         - name: the name to check
     """
+    name = request.values.get(name_key)
+    if name is None:
+        resp = json.dumps(serv.error_msg(f"no {name_key}"))
+        raise ValueError(Response(response=resp,
+                status=Status.BAD_REQUEST.value, mimetype=_MIME))
+    name = str(name)
     if len(name) > database.MAX_NAME_LENGTH:
         resp = json.dumps(serv.error_msg("name too long"))
         raise ValueError(Response(response=resp,
                 status=Status.BAD_REQUEST.value, mimetype=_MIME))
+    return name
 
 
-def _check_pw_hash(pw_hash: str) -> None:
+def _check_pw_hash(pw_hash_key: str) -> str:
     """ Raises a ValueError if the password hash is malformed.
 
         - pw_hash: the password hash to check
     """
+    pw_hash = request.values.get(pw_hash_key)
+    if pw_hash is None:
+        resp = json.dumps(serv.error_msg(f"no {pw_hash_key}"))
+        raise ValueError(Response(response=resp,
+                status=Status.BAD_REQUEST.value, mimetype=_MIME))
+    pw_hash = str(pw_hash).lower()
     if _PW_REGEX.match(pw_hash) is None:
         resp = json.dumps(serv.error_msg("invalid pw hash"))
         raise ValueError(Response(response=resp,
                 status=Status.BAD_REQUEST.value, mimetype=_MIME))
+    return pw_hash
 
 
 @flask_app.route("/highscore/<int:max_entries>", methods=["GET"])
@@ -61,11 +76,9 @@ def highscore(max_entries: int) -> Response:
 
 @flask_app.route("/register_player", methods=["POST"])
 def register_player() -> Response:
-    name = str(request.values.get("name"))
-    pw_hash = str(request.values.get("pw_hash")).lower()
     try:
-        _check_name(name)
-        _check_pw_hash(pw_hash)
+        name = _check_name("name")
+        pw_hash = _check_pw_hash("pw_hash")
     except ValueError as error:
         return error.args[0]
     response = serv.register_player(name, pw_hash)
