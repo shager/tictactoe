@@ -66,6 +66,9 @@ def _check_pw_hash(pw_hash_key: str) -> str:
     return pw_hash
 
 
+# below are the implemented HTTP requests
+
+
 @flask_app.route("/highscore/<int:max_entries>", methods=["GET"])
 def highscore(max_entries: int) -> Response:
     highscore_list = serv.highscore_list(max_entries)
