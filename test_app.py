@@ -80,9 +80,10 @@ class TestApp:
 
 
     @staticmethod
-    def get(suffix):
+    def get(suffix, data=None):
         url = f"http://{HOST}:{PORT}/{suffix}"
-        res = req.get(url)
+        data = {} if data is None else data
+        res = req.get(url, data=data)
         code = res.status_code
         content = json.loads(res.content.decode())
         return code, content
@@ -107,6 +108,11 @@ class TestApp:
     @staticmethod
     def bogus_pw_hashes():
         return (None, "", "1" * (PW_LEN + 1), "foobar")
+
+
+    @staticmethod
+    def bogus_game_ids():
+        return (None, "", "hello", "0", "-1")
 
 
     def test_highscore_empty(self):
@@ -215,4 +221,17 @@ class TestApp:
 
 
     def test_game_state_bad(self):
-        pass
+        S = server.Server
+        tests = itertools.product(self.bogus_names(), self.bogus_pw_hashes(),
+                self.bogus_game_ids())
+        for name, pw_hash, game_id in tests:
+            data = {}
+            if name is not None:
+                data[app.PARAM_NAME] = name
+            if pw_hash is not None:
+                data[app.PARAM_PW_HASH] = pw_hash
+            if game_id is not None:
+                data[app.PARAM_GAME_ID] = game_id
+            code, content = self.get("game_state", data)
+            assert code == Status.BAD_REQUEST.value
+            assert content[S.STATUS_KEY] == S.STATUS_ERROR
