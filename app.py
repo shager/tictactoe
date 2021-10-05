@@ -3,6 +3,7 @@
 import sys
 import json
 import re
+from typing import Optional
 from http import HTTPStatus as Status
 from flask import Flask
 from flask import request
@@ -29,6 +30,28 @@ def code_from_response(response: server.Response) -> int:
     return Status.BAD_REQUEST.value
 
 
+def _check_name(name: str) -> None:
+    """ Raises a ValueError if the name is malformed.
+
+        - name: the name to check
+    """
+    if len(name) > database.MAX_NAME_LENGTH:
+        resp = json.dumps(serv.error_msg("name too long"))
+        raise ValueError(Response(response=resp,
+                status=Status.BAD_REQUEST.value, mimetype=_MIME))
+
+
+def _check_pw_hash(pw_hash: str) -> None:
+    """ Raises a ValueError if the password hash is malformed.
+
+        - pw_hash: the password hash to check
+    """
+    if _PW_REGEX.match(pw_hash) is None:
+        resp = json.dumps(serv.error_msg("invalid pw hash"))
+        raise ValueError(Response(response=resp,
+                status=Status.BAD_REQUEST.value, mimetype=_MIME))
+
+
 @flask_app.route("/highscore/<int:max_entries>", methods=["GET"])
 def highscore(max_entries: int) -> Response:
     highscore_list = serv.highscore_list(max_entries)
@@ -40,14 +63,11 @@ def highscore(max_entries: int) -> Response:
 def register_player() -> Response:
     name = str(request.values.get("name"))
     pw_hash = str(request.values.get("pw_hash")).lower()
-    if len(name) > database.MAX_NAME_LENGTH:
-        resp = json.dumps(serv.error_msg("name too long"))
-        return Response(response=resp,
-                status=Status.BAD_REQUEST.value, mimetype=_MIME)
-    if _PW_REGEX.match(pw_hash) is None:
-        resp = json.dumps(serv.error_msg("invalid pw hash"))
-        return Response(response=resp,
-                status=Status.BAD_REQUEST.value, mimetype=_MIME)
+    try:
+        _check_name(name)
+        _check_pw_hash(pw_hash)
+    except ValueError as error:
+        return error.args[0]
     response = serv.register_player(name, pw_hash)
     code = code_from_response(response)
     return Response(response=json.dumps(response), status=code, mimetype=_MIME)
