@@ -185,3 +185,29 @@ class TestApp:
             code, content = self.post("create_game", data)
             assert code == Status.BAD_REQUEST.value
             assert content[S.STATUS_KEY] == S.STATUS_ERROR
+
+
+    def test_create_game_good(self):
+        """ Tests that a game can be created if parameters are correct.
+        """
+        S = server.Server
+        # add some players
+        name1 = "tom"
+        pw_hash1 = "1" * PW_LEN
+        name2 = "hank"
+        pw_hash2 = "2" * PW_LEN
+        code, _ = self.post("register_player",
+                {"name": name1, "pw_hash": pw_hash1})
+        assert code == Status.OK.value
+        code, _ = self.post("register_player",
+                {"name": name2, "pw_hash": pw_hash2})
+        assert code == Status.OK.value
+        # create the game
+        data = {
+            "player_1_name": name1,
+            "player_2_name": name2,
+            "pw_hash"      : pw_hash1
+        }
+        code, content = self.post("create_game", data)
+        assert code == Status.OK.value
+        assert content[S.STATUS_KEY] == S.STATUS_OK
