@@ -117,8 +117,10 @@ class TestApp:
         ("a", "x" * PW_LEN),
         # no name
         (None, "1" * PW_LEN),
+        # empty name
+        ("", "1" * PW_LEN),
         # no password
-        ("a", None)
+        ("a", None),
     ])
     def test_register_player_bad(self, name, pw):
         S = server.Server

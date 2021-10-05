@@ -42,7 +42,7 @@ def _check_name(name_key: str) -> str:
         raise ValueError(Response(response=resp,
                 status=Status.BAD_REQUEST.value, mimetype=_MIME))
     name = str(name)
-    if len(name) > database.MAX_NAME_LENGTH:
+    if len(name) == 0 or len(name) > database.MAX_NAME_LENGTH:
         resp = json.dumps(serv.error_msg("name too long"))
         raise ValueError(Response(response=resp,
                 status=Status.BAD_REQUEST.value, mimetype=_MIME))
