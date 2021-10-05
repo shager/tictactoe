@@ -102,6 +102,16 @@ class TestApp:
 
 
     @staticmethod
+    def put(suffix, data=None):
+        url = f"http://{HOST}:{PORT}/{suffix}"
+        data = {} if data is None else data
+        res = req.put(url, data=data)
+        code = res.status_code
+        content = json.loads(res.content.decode())
+        return code, content
+
+
+    @staticmethod
     def good_names():
         return ("".join(random.choice(string.ascii_letters)
                 for _ in range(MAX_NAME_LEN)),)
@@ -132,6 +142,16 @@ class TestApp:
     @staticmethod
     def bogus_game_ids():
         return (None, "", "hello", "0", "-1", "1.0")
+
+
+    @staticmethod
+    def good_pos():
+        return (random.randrange(9),)
+
+
+    @staticmethod
+    def bogus_pos():
+        return (None, "", -1, 9, 1.2, "a")
 
 
     def test_highscore_empty(self):
@@ -276,3 +296,31 @@ class TestApp:
             assert code == Status.OK.value
             assert content[S.TURN_KEY] == name1
             assert content[S.BOARD_KEY] == 0
+
+
+    def test_make_turn_bad(self):
+        """ Tests that no invalid parameters can be passed to make_turn.
+        """
+        t1 = itertools.product(self.bogus_names(), self.good_pw_hashes(),
+                self.good_pos(), self.good_game_ids())
+        t2 = itertools.product(self.good_names(), self.bogus_pw_hashes(),
+                self.good_pos(), self.good_game_ids())
+        t3 = itertools.product(self.good_names(), self.good_pw_hashes(),
+                self.bogus_pos(), self.good_game_ids())
+        t4 = itertools.product(self.good_names(), self.good_pw_hashes(),
+                self.good_pos(), self.bogus_game_ids())
+        tests = itertools.chain(t1, t2, t3, t4)
+        for name, pw_hash, pos, game_id in tests:
+            data = {}
+            if name is not None:
+                data[app.PARAM_NAME] = name
+            if pw_hash is not None:
+                data[app.PARAM_PW_HASH] = pw_hash
+            if pos is not None:
+                data[app.PARAM_POS] = pos
+            if game_id is not None:
+                data[app.PARAM_GAME_ID] = game_id
+            code, content = self.put("make_turn", data)
+            S = server.Server
+            assert code == Status.BAD_REQUEST.value
+            assert content[S.STATUS_KEY] == S.STATUS_ERROR
