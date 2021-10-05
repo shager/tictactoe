@@ -92,6 +92,24 @@ def _check_game_id(key: str) -> int:
     return game_id
 
 
+def _check_pos(key: str) -> int:
+    """ Raises a ValueError if the position is malformed.
+        Returns a position in case of success.
+
+        - key: the parameter name for the position
+    """
+    pos = request.values.get(key)
+    if pos is None:
+        _raise_bad_request(f"no {key}")
+    try:
+        pos = int(pos)
+    except ValueError:
+        _raise_bad_request(f"invalid {key} (no integer)")
+    if not (0 <= pos <= 8):
+        _raise_bad_request(f"invalid {key} (not in range 0-8)")
+    return pos
+
+
 # ****************  below are the implemented HTTP requests ***************** #
 
 
@@ -101,6 +119,7 @@ PARAM_PLAYER1_NAME = "player_1_name"
 PARAM_PLAYER2_NAME = "player_2_name"
 PARAM_PW_HASH      = "pw_hash"
 PARAM_GAME_ID      = "game_id"
+PARAM_POS          = "pos"
 
 
 @flask_app.route("/highscore/<int:max_entries>", methods=["GET"])
@@ -144,6 +163,20 @@ def game_state() -> Response:
     except ValueError as error:
         return error.args[0]
     response = serv.game_state(name, pw_hash, game_id)
+    code = code_from_response(response)
+    return Response(response=json.dumps(response), status=code, mimetype=_MIME)
+
+
+@flask_app.route("/make_turn", methods=["PUT"])
+def make_turn() -> Response:
+    try:
+        name = _check_name(PARAM_NAME)
+        pw_hash = _check_pw_hash(PARAM_PW_HASH)
+        pos = _check_pos(PARAM_POS)
+        game_id = _check_game_id(PARAM_GAME_ID)
+    except ValueError as error:
+        return error.args[0]
+    response = serv.make_turn(name, pw_hash, pos, game_id)
     code = code_from_response(response)
     return Response(response=json.dumps(response), status=code, mimetype=_MIME)
 
