@@ -2,6 +2,7 @@
 """
 
 import os
+import itertools
 from http import HTTPStatus as Status
 from werkzeug.serving import make_server
 import threading
@@ -97,6 +98,17 @@ class TestApp:
         return code, content
 
 
+    @staticmethod
+    def bogus_names():
+        return (None, "", "a" * (MAX_NAME_LEN + 1))
+
+
+
+    @staticmethod
+    def bogus_pw_hashes():
+        return (None, "", "1" * (PW_LEN + 1), "foobar")
+
+
     def test_highscore_empty(self):
         """ Checks that the highscore list can be obtained.
         """
@@ -113,21 +125,9 @@ class TestApp:
             checked.
         """
         S = server.Server
-        tests = [
-            # name too long
-            ("a" * (MAX_NAME_LEN + 1), "1" * PW_LEN),
-            # malformed pw (wrong size)
-            ("a", "1" * (PW_LEN + 1)),
-            # malformed pw (wrong characters)
-            ("a", "x" * PW_LEN),
-            # no name
-            (None, "1" * PW_LEN),
-            # empty name
-            ("", "1" * PW_LEN),
-            # no password
-            ("a", None),
-        ]
-        for name, pw_hash in tests:
+        bad_names = self.bogus_names()
+        bad_pws = self.bogus_pw_hashes()
+        for name, pw_hash in itertools.product(bad_names, bad_pws):
             data = {}
             if name is not None:
                 data["name"] = name
@@ -172,16 +172,8 @@ class TestApp:
         """ Tests that parameters to create_game are sanity-checked.
         """
         S = server.Server
-        tests = [
-            # no name player 1
-            (None, "1" * PW_LEN, "b" * MAX_NAME_LEN),
-            ("", "1" * PW_LEN, "b" * MAX_NAME_LEN),
-            # no name player 2
-            ("a", "1" * PW_LEN, None),
-            ("a", "1" * PW_LEN, ""),
-            # bad password
-            ("a", "bad", "b")
-        ]
+        tests = itertools.product(self.bogus_names(), self.bogus_pw_hashes(),
+                self.bogus_names())
         for p1_name, pw_hash, p2_name in tests:
             data = {}
             if p1_name is not None:
