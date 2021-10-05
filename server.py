@@ -78,6 +78,10 @@ class Board:
 
 
     def is_player_win(self, player_num: int) -> bool:
+        """ Checks if a player has won.
+
+            - player_num: the player number
+        """
         if player_num == 1:
             marks = self.b1
         elif player_num == 2:
@@ -90,15 +94,24 @@ class Board:
         return win
 
 
-    def is_win(self):
+    def is_win(self) -> bool:
+        """ Checks if any player has won.
+        """
         return self.is_player_win(1) or self.is_player_win(2)
 
 
-    def is_finished(self):
+    def is_finished(self) -> bool:
+        """ Checks if the game is finished.
+        """
         return self.is_full() or self.is_win()
 
         
     def set_field(self, pos: int, player_num: int) -> None:
+        """ Marks a field on the board for a player.
+
+            - pos       : the position to mark
+            - player_num: the player that wants to make the mark
+        """
         if player_num == 1:
             marks = self.b1
             other_marks = self.b2
@@ -118,6 +131,8 @@ class Board:
 
 
     def is_full(self) -> bool:
+        """ Checks if every field on the board has been marked.
+        """
         count = 0
         for shift in range(18):
             count += ((self.b >> shift) & 0x1)
@@ -125,10 +140,19 @@ class Board:
 
 
     def is_set(self, pos: int) -> bool:
+        """ Checks if a position has been marked by any player.
+
+            - pos: the position to check
+        """
         return self.is_set_player(pos, 1) or self.is_set_player(pos, 2)
         
 
     def is_set_player(self, pos: int, player_num: int) -> bool:
+        """ Checks if a position has been marked by player.
+
+            - pos       : the position
+            - player_num: the player number
+        """
         if player_num == 1:
             marks = self.b1
         elif player_num == 2:
@@ -151,6 +175,8 @@ class Board:
 
 
     def __str__(self):
+        """ Returns a pretty-print of the game board.
+        """
         dashes = "-------------"
         buf = ["", dashes]
         rows = ((0, 1, 2), (3, 4, 5), (6, 7, 8))
@@ -199,6 +225,11 @@ class Server:
 
 
     def register_player(self, name: str, pw_hash: str) -> Response:
+        """ Adds a player to the database, if the name does not exist.
+
+            - name   : the player's name
+            - pw_hash: the player's password hash
+        """
         if self._db.player_by_name(name=name) is not None:
             return self.error_msg(f"player {name} already exists")
         self._db.register_player(name, pw_hash)
@@ -207,6 +238,13 @@ class Server:
 
     def create_game(self, player_1_name: str, pw_hash: str,
             player_2_name: str) -> Response:
+        """ Creates a game for a tuple of players and writes it to the
+            database.
+
+            - player_1_name: name of first player
+            - pw_hash      : password hash for first player
+            - player_2_name: name of second player
+        """
         player = self._db.player_by_name(player_1_name)
         if player is None:
             return self.error_msg(
@@ -223,6 +261,10 @@ class Server:
 
 
     def highscore_list(self, max_entries: int) -> Response:
+        """ Fetches the highscore list from the database.
+
+            - max_entries: maximum number of entries in the list
+        """
         players = self._db.highscore(max_entries)
         json_list = [{self.NAME_KEY: p.name, self.SCORE_KEY: p.score}
                 for p in players]
@@ -230,6 +272,13 @@ class Server:
 
 
     def game_state(self, name: str, pw_hash: str, game_id: int) -> Response:
+        """ Fetches a game's state from the database.
+            Can only be done for a registered player.
+
+            - name   : the player's name
+            - pw_hash: the player's password hash
+            - game_id: the game's ID
+        """
         try:
             _, game = self._auth_player_and_game(name, pw_hash, game_id)
         except ValueError as error:
@@ -243,7 +292,13 @@ class Server:
 
     def make_turn(self, name: str, pw_hash: str, pos: int,
             game_id: int) -> Response:
-        """ TODO
+        """ Updates a game by making a turn.
+            Can only be done for a registered player associated to the game.
+
+            - name   : the player's name
+            - pw_hash: the player's password hash
+            - pos    : the position to mark on the game board
+            - game_id: the game's ID
         """
         # sanity checks
         try:
@@ -278,7 +333,11 @@ class Server:
 
     def _auth_player_and_game(self, name: str, pw_hash: str,
             game_id: int) -> Tuple[Player, Game]:
-        """ TODO
+        """ Fetches a player and game for the corresponding name and game IDs.
+
+            - name   : the player's name
+            - pw_hash: the player's password hash
+            - game_id: the game's ID
         """
         player = self._db.player_by_name(name)
         if player is None:
