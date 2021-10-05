@@ -15,7 +15,6 @@ import database
 
 
 flask_app = Flask(__name__)
-#serv = server.Server(database.SQLiteDatabase())
 serv = None
 
 
