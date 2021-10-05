@@ -2,6 +2,7 @@ from typing import Dict
 from typing import Any
 from typing import Optional
 from typing import Tuple
+from typing import Sequence
 import os
 from database import SQLiteDatabase
 from database import Player
@@ -135,6 +136,18 @@ class Board:
         else:
             raise ValueError("invalid player number")
         return bool((marks >> pos) & 0x1)
+
+
+    def free_fields(self) -> Sequence[int]:
+        """ Returns a sequence of non-marked field indices.
+        """
+        both = self.b1 | self.b2
+        indices = []
+        for i in range(9):
+            if (both >> i) & 0x1:
+                continue
+            indices.append(i)
+        return indices
 
 
     def __str__(self):

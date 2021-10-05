@@ -63,6 +63,17 @@ class TestBoard:
         assert board.is_full() == full
 
 
+    @pytest.mark.parametrize("marks, exp", [
+        (0b_000_000_000_000_000_000, list(range(9))),
+        (0b_000_000_001_100_000_100, [1, 3, 4, 5, 6, 7]),
+        (0b_111_000_111_000_111_000, []),
+        (0b_100_100_010_001_001_100, [0, 4, 7])
+    ])
+    def test_free_fields(self, marks, exp):
+        board = Board(marks)
+        assert sorted(list(board.free_fields())) == exp
+
+
 class TestServer:
     """ Unit tests for the Server class.
     """
