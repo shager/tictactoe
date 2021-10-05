@@ -138,11 +138,6 @@ def create_game() -> Response:
     return Response(response=json.dumps(response), status=code, mimetype=_MIME)
 
 
-# XXX: not sure whether to use GET for this
-# Technically, this operation is idempotent and doesn't change anything.
-# However, transfering a PW hash in the URL is also not great.
-# Therefore, we put it in the body => but this may go against the idea of
-# GET ...
 @flask_app.route("/game_state", methods=["GET"])
 def game_state() -> Response:
     try:
