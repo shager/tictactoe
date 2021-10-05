@@ -180,7 +180,7 @@ class TestApp:
                 data["player_1_name"] = p1_name
             if pw_hash is not None:
                 data["pw_hash"] = pw_hash
-            if p1_name is not None:
+            if p2_name is not None:
                 data["player_2_name"] = p2_name
             code, content = self.post("create_game", data)
             assert code == Status.BAD_REQUEST.value
