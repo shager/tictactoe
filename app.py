@@ -87,16 +87,13 @@ def register_player() -> Response:
 
 
 @flask_app.route("/create_game", methods=["POST"])
-def create_game() -> str:
-    player_1_name = str(request.values("player_1_name"))
-    pw_hash = str(request.values.get("pw_hash")).lower()
-    player_2_name = str(request.values("player_2_name"))
-    if len(player_1_name) > database.MAX_NAME_LENGTH:
-        abort(400)
-    if len(player_2_name) > database.MAX_NAME_LENGTH:
-        abort(400)
-    if _PW_REGEX.match(pw_hash) is None:
-        abort(400)
+def create_game() -> Response:
+    try:
+        player_1_name = _check_name("player_1_name")
+        player_2_name = _check_name("player_2_name")
+        pw_hash = _check_pw_hash("pw_hash")
+    except ValueError as error:
+        return error.args[0]
     response = serv.create_game(player_1_name, pw_hash, player_2_name)
     return json.dumps(response)
 

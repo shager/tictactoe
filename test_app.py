@@ -162,3 +162,28 @@ class TestApp:
         assert len(scores) == 2
         names = set(s[S.NAME_KEY] for s in scores)
         assert names == set([name, name2])
+
+
+    def test_create_game_bad(self):
+        S = server.Server
+        tests = [
+            # no name player 1
+            (None, "1" * PW_LEN, "b" * MAX_NAME_LEN),
+            ("", "1" * PW_LEN, "b" * MAX_NAME_LEN),
+            # no name player 2
+            ("a", "1" * PW_LEN, None),
+            ("a", "1" * PW_LEN, ""),
+            # bad password
+            ("a", "bad", "b")
+        ]
+        for p1_name, pw_hash, p2_name in tests:
+            data = {}
+            if p1_name is not None:
+                data["player_1_name"] = p1_name
+            if pw_hash is not None:
+                data["pw_hash"] = pw_hash
+            if p1_name is not None:
+                data["player_2_name"] = p2_name
+            code, content = self.post("create_game", data)
+            assert code == Status.BAD_REQUEST.value
+            assert content[S.STATUS_KEY] == S.STATUS_ERROR
