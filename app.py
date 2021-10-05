@@ -116,8 +116,8 @@ def highscore(max_entries: int) -> Response:
 @flask_app.route("/register_player", methods=["POST"])
 def register_player() -> Response:
     try:
-        name = _check_name("name")
-        pw_hash = _check_pw_hash("pw_hash")
+        name = _check_name(PARAM_NAME)
+        pw_hash = _check_pw_hash(PARAM_PW_HASH)
     except ValueError as error:
         return error.args[0]
     response = serv.register_player(name, pw_hash)
@@ -128,9 +128,9 @@ def register_player() -> Response:
 @flask_app.route("/create_game", methods=["POST"])
 def create_game() -> Response:
     try:
-        player_1_name = _check_name("player_1_name")
-        player_2_name = _check_name("player_2_name")
-        pw_hash = _check_pw_hash("pw_hash")
+        player_1_name = _check_name(PARAM_PLAYER1_NAME)
+        player_2_name = _check_name(PARAM_PLAYER2_NAME)
+        pw_hash = _check_pw_hash(PARAM_PW_HASH)
     except ValueError as error:
         return error.args[0]
     response = serv.create_game(player_1_name, pw_hash, player_2_name)
