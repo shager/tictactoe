@@ -108,30 +108,34 @@ class TestApp:
         assert scores == []
 
 
-    @pytest.mark.parametrize("name, pw", [
-        # name too long
-        ("a" * (MAX_NAME_LEN + 1), "1" * PW_LEN),
-        # malformed pw (wrong size)
-        ("a", "1" * (PW_LEN + 1)),
-        # malformed pw (wrong characters)
-        ("a", "x" * PW_LEN),
-        # no name
-        (None, "1" * PW_LEN),
-        # empty name
-        ("", "1" * PW_LEN),
-        # no password
-        ("a", None),
-    ])
-    def test_register_player_bad(self, name, pw):
+    def test_register_player_bad(self):
+        """ Tests that post parameters to register_player are properly
+            checked.
+        """
         S = server.Server
-        data = {}
-        if name is not None:
-            data["name"] = name
-        if pw is not None:
-            data["pw_hash"] = pw
-        code, content = self.post("register_player", data)
-        assert code == Status.BAD_REQUEST.value
-        assert content[S.STATUS_KEY] == S.STATUS_ERROR
+        tests = [
+            # name too long
+            ("a" * (MAX_NAME_LEN + 1), "1" * PW_LEN),
+            # malformed pw (wrong size)
+            ("a", "1" * (PW_LEN + 1)),
+            # malformed pw (wrong characters)
+            ("a", "x" * PW_LEN),
+            # no name
+            (None, "1" * PW_LEN),
+            # empty name
+            ("", "1" * PW_LEN),
+            # no password
+            ("a", None),
+        ]
+        for name, pw_hash in tests:
+            data = {}
+            if name is not None:
+                data["name"] = name
+            if pw_hash is not None:
+                data["pw_hash"] = pw_hash
+            code, content = self.post("register_player", data)
+            assert code == Status.BAD_REQUEST.value
+            assert content[S.STATUS_KEY] == S.STATUS_ERROR
 
 
     def test_register_player_good(self):
