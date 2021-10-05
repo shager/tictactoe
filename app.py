@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
 import json
 import re
-from typing import Optional
 from http import HTTPStatus as Status
 from flask import Flask
 from flask import request
-from flask import abort
 from flask import Response
 import server
 import database
