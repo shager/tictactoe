@@ -75,7 +75,7 @@ def _raise_bad_request(why: str) -> None:
 
 
 def _check_game_id(key: str) -> int:
-    """ Raises a ValueError if the password hash is malformed.
+    """ Raises a ValueError if game ID is malformed.
         Returns a valid ID in case of success.
 
         - key: the parameter name for the game id
