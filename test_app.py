@@ -11,6 +11,8 @@ import requests as req
 import server
 import database
 import json
+import random
+import string
 import app
 
 from tst_utils import random_string
@@ -100,9 +102,21 @@ class TestApp:
 
 
     @staticmethod
+    def good_names():
+        return ("".join(random.choice(string.ascii_letters)
+                for _ in range(MAX_NAME_LEN)),)
+
+
+    @staticmethod
     def bogus_names():
         return (None, "", "a" * (MAX_NAME_LEN + 1))
 
+
+
+    @staticmethod
+    def good_pw_hashes():
+        return ("".join(random.choice(string.hexdigits)
+                for _ in range(PW_LEN)),)
 
 
     @staticmethod
@@ -111,8 +125,13 @@ class TestApp:
 
 
     @staticmethod
+    def good_game_ids():
+        return (random.randrange(1 << 31),)
+
+
+    @staticmethod
     def bogus_game_ids():
-        return (None, "", "hello", "0", "-1")
+        return (None, "", "hello", "0", "-1", "1.0")
 
 
     def test_highscore_empty(self):
@@ -154,7 +173,7 @@ class TestApp:
         assert content[S.STATUS_KEY] == S.STATUS_OK
         # adding the same guy again will fail, though ...
         code, content = self.post("register_player", data)
-        assert code == Status.BAD_REQUEST.value
+        assert code == Status.FORBIDDEN.value
         assert content[S.STATUS_KEY] == S.STATUS_ERROR
         # adding a different guy should work
         name2 = name
@@ -221,9 +240,14 @@ class TestApp:
 
 
     def test_game_state_bad(self):
-        S = server.Server
-        tests = itertools.product(self.bogus_names(), self.bogus_pw_hashes(),
+        t1 = itertools.product(self.bogus_names(), self.good_pw_hashes(),
+                self.good_game_ids())
+        t2 = itertools.product(self.good_names(), self.bogus_pw_hashes(),
+                self.good_game_ids())
+        t3 = itertools.product(self.good_names(), self.good_pw_hashes(),
                 self.bogus_game_ids())
+        tests = itertools.chain(t1, t2, t3)
+        tests = t3
         for name, pw_hash, game_id in tests:
             data = {}
             if name is not None:
@@ -233,5 +257,6 @@ class TestApp:
             if game_id is not None:
                 data[app.PARAM_GAME_ID] = game_id
             code, content = self.get("game_state", data)
+            S = server.Server
             assert code == Status.BAD_REQUEST.value
             assert content[S.STATUS_KEY] == S.STATUS_ERROR

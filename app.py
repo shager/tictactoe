@@ -29,7 +29,7 @@ def code_from_response(response: server.Response) -> int:
     S = server.Server
     if response[S.STATUS_KEY] == S.STATUS_OK:
         return Status.OK.value
-    return Status.BAD_REQUEST.value
+    return Status.FORBIDDEN.value
 
 
 def _check_name(name_key: str) -> str:
@@ -77,21 +77,21 @@ def _raise_bad_request(why: str) -> None:
             status=Status.BAD_REQUEST.value, mimetype=_MIME))
 
 
-def _check_game_id(game_id_key: str) -> int:
+def _check_game_id(key: str) -> int:
     """ Raises a ValueError if the password hash is malformed.
         Returns a valid ID in case of success.
 
-        - game_id_key: the parameter name for the game id
+        - key: the parameter name for the game id
     """
-    game_id = request.values.get(pw_hash_key)
+    game_id = request.values.get(key)
     if game_id is None:
-        _raise_bad_request(f"no {game_id_key}")
+        _raise_bad_request(f"no {key}")
     try:
         game_id = int(game_id)
     except ValueError:
-        _raise_bad_request(f"invalid {game_id_key}")
+        _raise_bad_request(f"invalid {key} (no integer)")
     if game_id <= 0:
-        _raise_bad_request(f"invalid {game_id_key}")
+        _raise_bad_request(f"invalid {key} (non-positive)")
     return game_id
 
 
