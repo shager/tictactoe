@@ -324,3 +324,90 @@ class TestApp:
             S = server.Server
             assert code == Status.BAD_REQUEST.value
             assert content[S.STATUS_KEY] == S.STATUS_ERROR
+
+
+    def test_full_game(self):
+        """ Runs a full game.
+        """
+        # register players
+        S = server.Server
+        # add some players
+        name1 = "tom"
+        pw_hash1 = "1" * PW_LEN
+        name2 = "hank"
+        pw_hash2 = "2" * PW_LEN
+        code, _ = self.post("register_player",
+                {app.PARAM_NAME: name1, app.PARAM_PW_HASH: pw_hash1})
+        assert code == Status.OK.value
+        code, _ = self.post("register_player",
+                {app.PARAM_NAME: name2, app.PARAM_PW_HASH: pw_hash2})
+        assert code == Status.OK.value
+        # create the game
+        data = {
+            app.PARAM_PLAYER1_NAME: name1,
+            app.PARAM_PLAYER2_NAME: name2,
+            app.PARAM_PW_HASH     : pw_hash1
+        }
+        code, content = self.post("create_game", data)
+        assert code == Status.OK.value
+        assert content[S.STATUS_KEY] == S.STATUS_OK
+        game_id = content[S.GAME_ID_KEY]
+        assert game_id > 0
+
+        # now play until the game has finished
+        # ------------------------------------
+        print("\n")
+        print(f"x = {name1}")
+        print(f"o = {name2}")
+
+        # helpers
+        def game_state(name, pw_hash, gid):
+            data = {
+                app.PARAM_NAME   : name,
+                app.PARAM_PW_HASH: pw_hash,
+                app.PARAM_GAME_ID: gid
+            }
+            return self.get("game_state", data)
+
+
+        def make_turn(name, pw_hash, pos, gid):
+            data = {
+                app.PARAM_NAME   : name,
+                app.PARAM_PW_HASH: pw_hash,
+                app.PARAM_POS    : pos,
+                app.PARAM_GAME_ID: gid
+            }
+            return self.put("make_turn", data)
+
+
+        while True:
+            # fetch game state
+            code1, content1 = game_state(name1, pw_hash1, game_id)
+            code2, content2 = game_state(name1, pw_hash1, game_id)
+            assert code1 == code2 == Status.OK.value
+            assert content1[S.BOARD_KEY] == content2[S.BOARD_KEY]
+            assert content1[S.TURN_KEY] == content2[S.TURN_KEY]
+            turn = content1[S.TURN_KEY]
+            assert turn in (name1, name2)
+
+            board = server.Board(content1[S.BOARD_KEY])
+            print(str(board))
+            if board.is_finished():
+                break
+
+            # choose random next position and make the move
+            pos = random.choice(board.free_fields())
+            pw_hash = pw_hash1 if turn == name1 else pw_hash2
+            code, content = make_turn(turn, pw_hash, pos, game_id)
+            assert code == Status.OK.value
+
+        # get the highscore
+        code, content = self.get("highscore/2")
+        assert code == Status.OK.value
+        assert content[S.STATUS_KEY] == S.STATUS_OK
+        scores = content[S.SCORES_KEY]
+        print("\n")
+        for i, entry in enumerate(scores, start=1):
+            name = entry[S.NAME_KEY]
+            score = entry[S.SCORE_KEY]
+            print(f"{i}. {name} (score = {score})")
