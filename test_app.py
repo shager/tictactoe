@@ -212,3 +212,7 @@ class TestApp:
         assert code == Status.OK.value
         assert content[S.STATUS_KEY] == S.STATUS_OK
         assert content[S.GAME_ID_KEY] == 1
+
+
+    def test_game_state_bad(self):
+        pass

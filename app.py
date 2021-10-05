@@ -22,6 +22,9 @@ _PW_REGEX = re.compile("^[0-9a-f]{" + str(database.PW_HASH_LENGTH) + "}$")
 _MIME = "application/json"
 
 
+# **************************** helper functions ***************************** #
+
+
 def code_from_response(response: server.Response) -> int:
     S = server.Server
     if response[S.STATUS_KEY] == S.STATUS_OK:
@@ -66,7 +69,39 @@ def _check_pw_hash(pw_hash_key: str) -> str:
     return pw_hash
 
 
-# below are the implemented HTTP requests
+def _raise_bad_request(why: str) -> None:
+    """ Raises a ValueError with a Response object.
+    """
+    resp = json.dumps(serv.error_msg(why))
+    raise ValueError(Response(response=resp,
+            status=Status.BAD_REQUEST.value, mimetype=_MIME))
+
+
+def _check_game_id(game_id_key: str) -> int:
+    """ Raises a ValueError if the password hash is malformed.
+        Returns a valid ID in case of success.
+
+        - game_id_key: the parameter name for the game id
+    """
+    game_id = request.values.get(pw_hash_key)
+    if game_id is None:
+        _raise_bad_request(f"no {game_id_key}")
+    try:
+        game_id = int(game_id)
+    except ValueError:
+        _raise_bad_request(f"invalid {game_id_key}")
+    if game_id <= 0:
+        _raise_bad_request(f"invalid {game_id_key}")
+    return game_id
+
+
+# ****************  below are the implemented HTTP requests ***************** #
+
+
+# parameter names
+PARAM_NAME    = "name"
+PARAM_PW_HASH = "pw_hash"
+PARAM_GAME_ID = "game_id"
 
 
 @flask_app.route("/highscore/<int:max_entries>", methods=["GET"])
@@ -98,6 +133,23 @@ def create_game() -> Response:
         return error.args[0]
     response = serv.create_game(player_1_name, pw_hash, player_2_name)
     return json.dumps(response)
+
+
+# XXX: not sure whether to use GET for this
+# Technically, this operation is idempotent and doesn't change anything.
+# However, transfering a PW hash in the URL is also not great.
+# Therefore, we put in the body => but this may go against the idea of GET ...
+@flask_app.route("/game_state", methods=["GET"])
+def game_state() -> Response:
+    try:
+        name = _check_name(PARAM_NAME)
+        pw_hash = _check_pw_hash(PARAM_PW_HASH)
+        game_id = _check_game_id(PARAM_GAME_ID)
+    except ValueError as error:
+        return error.args[0]
+    response = serv.game_state(name, pw_hash, game_id)
+    code = code_from_response(response)
+    return Response(response=json.dumps(response), status=code, mimetype=_MIME)
 
 
 def _main():
