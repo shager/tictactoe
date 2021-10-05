@@ -247,7 +247,6 @@ class TestApp:
         t3 = itertools.product(self.good_names(), self.good_pw_hashes(),
                 self.bogus_game_ids())
         tests = itertools.chain(t1, t2, t3)
-        tests = t3
         for name, pw_hash, game_id in tests:
             data = {}
             if name is not None:
