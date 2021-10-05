@@ -155,9 +155,9 @@ class TestApp:
         for name, pw_hash in itertools.product(bad_names, bad_pws):
             data = {}
             if name is not None:
-                data["name"] = name
+                data[app.PARAM_NAME] = name
             if pw_hash is not None:
-                data["pw_hash"] = pw_hash
+                data[app.PARAM_PW_HASH] = pw_hash
             code, content = self.post("register_player", data)
             assert code == Status.BAD_REQUEST.value
             assert content[S.STATUS_KEY] == S.STATUS_ERROR
@@ -167,7 +167,7 @@ class TestApp:
         S = server.Server
         name = random_string(database.MAX_NAME_LENGTH)
         pw_hash = random_hex_string(database.PW_HASH_LENGTH)
-        data = {"name": name, "pw_hash": pw_hash}
+        data = {app.PARAM_NAME: name, app.PARAM_PW_HASH: pw_hash}
         code, content = self.post("register_player", data)
         assert code == Status.OK.value
         assert content[S.STATUS_KEY] == S.STATUS_OK
@@ -180,7 +180,7 @@ class TestApp:
         while name2 == name:
             name2 = random_string(database.MAX_NAME_LENGTH)
         pw_hash = random_hex_string(database.PW_HASH_LENGTH)
-        data = {"name": name2, "pw_hash": pw_hash}
+        data = {app.PARAM_NAME: name2, app.PARAM_PW_HASH: pw_hash}
         code, content = self.post("register_player", data)
         assert code == Status.OK.value
         assert content[S.STATUS_KEY] == S.STATUS_OK
@@ -202,11 +202,11 @@ class TestApp:
         for p1_name, pw_hash, p2_name in tests:
             data = {}
             if p1_name is not None:
-                data["player_1_name"] = p1_name
+                data[app.PARAM_PLAYER1_NAME] = p1_name
             if pw_hash is not None:
-                data["pw_hash"] = pw_hash
+                data[app.PARAM_PW_HASH] = pw_hash
             if p2_name is not None:
-                data["player_2_name"] = p2_name
+                data[app.PARAM_PLAYER2_NAME] = p2_name
             code, content = self.post("create_game", data)
             assert code == Status.BAD_REQUEST.value
             assert content[S.STATUS_KEY] == S.STATUS_ERROR
