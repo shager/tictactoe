@@ -244,16 +244,16 @@ class TestApp:
         name2 = "hank"
         pw_hash2 = "2" * PW_LEN
         code, _ = self.post("register_player",
-                {"name": name1, "pw_hash": pw_hash1})
+                {app.PARAM_NAME: name1, app.PARAM_PW_HASH: pw_hash1})
         assert code == Status.OK.value
         code, _ = self.post("register_player",
-                {"name": name2, "pw_hash": pw_hash2})
+                {app.PARAM_NAME: name2, app.PARAM_PW_HASH: pw_hash2})
         assert code == Status.OK.value
         # create the game
         data = {
-            "player_1_name": name1,
-            "player_2_name": name2,
-            "pw_hash"      : pw_hash1
+            app.PARAM_PLAYER1_NAME: name1,
+            app.PARAM_PLAYER2_NAME: name2,
+            app.PARAM_PW_HASH     : pw_hash1
         }
         code, content = self.post("create_game", data)
         assert code == Status.OK.value

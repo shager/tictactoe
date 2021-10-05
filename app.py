@@ -99,9 +99,11 @@ def _check_game_id(key: str) -> int:
 
 
 # parameter names
-PARAM_NAME    = "name"
-PARAM_PW_HASH = "pw_hash"
-PARAM_GAME_ID = "game_id"
+PARAM_NAME         = "name"
+PARAM_PLAYER1_NAME = "player_1_name"
+PARAM_PLAYER2_NAME = "player_2_name"
+PARAM_PW_HASH      = "pw_hash"
+PARAM_GAME_ID      = "game_id"
 
 
 @flask_app.route("/highscore/<int:max_entries>", methods=["GET"])
