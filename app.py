@@ -132,7 +132,8 @@ def create_game() -> Response:
     except ValueError as error:
         return error.args[0]
     response = serv.create_game(player_1_name, pw_hash, player_2_name)
-    return json.dumps(response)
+    code = code_from_response(response)
+    return Response(response=json.dumps(response), status=code, mimetype=_MIME)
 
 
 # XXX: not sure whether to use GET for this
