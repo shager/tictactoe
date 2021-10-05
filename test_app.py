@@ -39,6 +39,10 @@ class ServerThread(threading.Thread):
         self._server.shutdown()
 
 
+MAX_NAME_LEN = database.MAX_NAME_LENGTH
+PW_LEN = database.PW_HASH_LENGTH
+
+
 class TestApp:
     """ Integration tests for the entire applicatiom.
 
@@ -106,13 +110,13 @@ class TestApp:
 
     @pytest.mark.parametrize("name, pw", [
         # name too long
-        ("a" * (database.MAX_NAME_LENGTH + 1), "1" * database.PW_HASH_LENGTH),
+        ("a" * (MAX_NAME_LEN + 1), "1" * PW_LEN),
         # malformed pw (wrong size)
-        ("a", "1" * (database.PW_HASH_LENGTH + 1)),
+        ("a", "1" * (PW_LEN + 1)),
         # malformed pw (wrong characters)
-        ("a", "x" * database.PW_HASH_LENGTH),
+        ("a", "x" * PW_LEN),
         # no name
-        (None, "1" * database.PW_HASH_LENGTH),
+        (None, "1" * PW_LEN),
         # no password
         ("a", None)
     ])
