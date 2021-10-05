@@ -197,8 +197,13 @@ class TestApp:
         """ Tests that parameters to create_game are sanity-checked.
         """
         S = server.Server
-        tests = itertools.product(self.bogus_names(), self.bogus_pw_hashes(),
+        t1 = itertools.product(self.bogus_names(), self.good_pw_hashes(),
+                self.good_names())
+        t2 = itertools.product(self.good_names(), self.bogus_pw_hashes(),
+                self.good_names())
+        t3 = itertools.product(self.good_names(), self.good_pw_hashes(),
                 self.bogus_names())
+        tests = itertools.chain(t1, t2, t3)
         for p1_name, pw_hash, p2_name in tests:
             data = {}
             if p1_name is not None:
