@@ -212,7 +212,29 @@ class TestApp:
             assert content[S.STATUS_KEY] == S.STATUS_ERROR
 
 
-    def test_create_game_good(self):
+    def test_game_state_bad(self):
+        t1 = itertools.product(self.bogus_names(), self.good_pw_hashes(),
+                self.good_game_ids())
+        t2 = itertools.product(self.good_names(), self.bogus_pw_hashes(),
+                self.good_game_ids())
+        t3 = itertools.product(self.good_names(), self.good_pw_hashes(),
+                self.bogus_game_ids())
+        tests = itertools.chain(t1, t2, t3)
+        for name, pw_hash, game_id in tests:
+            data = {}
+            if name is not None:
+                data[app.PARAM_NAME] = name
+            if pw_hash is not None:
+                data[app.PARAM_PW_HASH] = pw_hash
+            if game_id is not None:
+                data[app.PARAM_GAME_ID] = game_id
+            code, content = self.get("game_state", data)
+            S = server.Server
+            assert code == Status.BAD_REQUEST.value
+            assert content[S.STATUS_KEY] == S.STATUS_ERROR
+
+
+    def test_create_game_and_game_state_good(self):
         """ Tests that a game can be created if parameters are correct.
         """
         S = server.Server
@@ -236,26 +258,16 @@ class TestApp:
         code, content = self.post("create_game", data)
         assert code == Status.OK.value
         assert content[S.STATUS_KEY] == S.STATUS_OK
-        assert content[S.GAME_ID_KEY] == 1
-
-
-    def test_game_state_bad(self):
-        t1 = itertools.product(self.bogus_names(), self.good_pw_hashes(),
-                self.good_game_ids())
-        t2 = itertools.product(self.good_names(), self.bogus_pw_hashes(),
-                self.good_game_ids())
-        t3 = itertools.product(self.good_names(), self.good_pw_hashes(),
-                self.bogus_game_ids())
-        tests = itertools.chain(t1, t2, t3)
-        for name, pw_hash, game_id in tests:
-            data = {}
-            if name is not None:
-                data[app.PARAM_NAME] = name
-            if pw_hash is not None:
-                data[app.PARAM_PW_HASH] = pw_hash
-            if game_id is not None:
-                data[app.PARAM_GAME_ID] = game_id
+        game_id = content[S.GAME_ID_KEY]
+        assert game_id > 0
+        # fetch the game state
+        for name, pw_hash in ((name1, pw_hash1), (name2, pw_hash2)):
+            data = {
+                app.PARAM_NAME   : name,
+                app.PARAM_PW_HASH: pw_hash,
+                app.PARAM_GAME_ID: game_id
+            }
             code, content = self.get("game_state", data)
-            S = server.Server
-            assert code == Status.BAD_REQUEST.value
-            assert content[S.STATUS_KEY] == S.STATUS_ERROR
+            assert code == Status.OK.value
+            assert content[S.TURN_KEY] == name1
+            assert content[S.BOARD_KEY] == 0
