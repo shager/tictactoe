@@ -136,7 +136,7 @@ class TestApp:
             code, content = self.post("register_player", data)
             assert code == Status.BAD_REQUEST.value
             assert content[S.STATUS_KEY] == S.STATUS_ERROR
-
+ 
 
     def test_register_player_good(self):
         S = server.Server
@@ -169,6 +169,8 @@ class TestApp:
 
 
     def test_create_game_bad(self):
+        """ Tests that parameters to create_game are sanity-checked.
+        """
         S = server.Server
         tests = [
             # no name player 1
