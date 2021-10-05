@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+""" The TicTacToe game's frontend.
+"""
 
 import json
 import re
